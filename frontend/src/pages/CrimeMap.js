@@ -100,7 +100,6 @@ const scrollbarStyles = `
 export default function CrimeMap() {
   const [reports, setReports] = useState([]);
   const [filter, setFilter] = useState("");
-  const [selectedReport, setSelectedReport] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [statistics, setStatistics] = useState({
     total: 0,
@@ -163,7 +162,7 @@ export default function CrimeMap() {
 
   if (isLoading) {
     return (
-      <div className="w-screen h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-800 to-pink-700">
+      <div className="w-screen h-screen flex items-center justify-center bg-gradient-to-br from-pink-500 via-fuchsia-500 to-purple-600">
         <div className="bg-white/20 backdrop-blur-sm p-8 rounded-lg flex flex-col items-center">
           <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mb-4"></div>
           <p className="text-white text-lg">Loading crime reports...</p>
@@ -175,7 +174,7 @@ export default function CrimeMap() {
   return (
     <>
       <style>{scrollbarStyles}</style>
-      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-800 to-pink-700 p-4">
+      <div className="min-h-screen bg-gradient-to-br from-pink-500 via-fuchsia-500 to-purple-600 p-4">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-4 gap-4">
             {/* Main Map Section - Takes up 3 columns */}
@@ -219,9 +218,6 @@ export default function CrimeMap() {
                       key={report.id}
                       position={[report.latitude, report.longitude]}
                       icon={crimeIcons[report.crimeType] || crimeIcons.Other}
-                      eventHandlers={{
-                        click: () => setSelectedReport(report)
-                      }}
                     >
                       <Popup>
                         <div className="p-2">

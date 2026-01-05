@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapIcon, ExclamationTriangleIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 
 export default function Home() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate loading time
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 1000);
@@ -36,7 +34,6 @@ export default function Home() {
             onClick={() => navigate('/map')}
             className="group bg-white/30 hover:bg-white/40 p-6 rounded-xl transition-all duration-300 flex flex-col items-center text-center border-2 border-white/40 hover:border-white/60 transform hover:-translate-y-1 hover:shadow-lg"
           >
-            <MapIcon className="h-12 w-12 text-white mb-4 group-hover:scale-110 transition-transform" />
             <h2 className="text-xl font-semibold text-white mb-2">Crime Map 🗺️</h2>
             <p className="text-white text-sm">View crime hotspots and stay informed</p>
           </button>
@@ -45,7 +42,6 @@ export default function Home() {
             onClick={() => navigate('/incidents')}
             className="group bg-white/30 hover:bg-white/40 p-6 rounded-xl transition-all duration-300 flex flex-col items-center text-center border-2 border-white/40 hover:border-white/60 transform hover:-translate-y-1 hover:shadow-lg"
           >
-            <DocumentTextIcon className="h-12 w-12 text-white mb-4 group-hover:scale-110 transition-transform" />
             <h2 className="text-xl font-semibold text-white mb-2">Reported Incidents 📋</h2>
             <p className="text-white text-sm">View all reported incidents</p>
           </button>
@@ -54,7 +50,6 @@ export default function Home() {
             onClick={() => navigate('/report')}
             className="group bg-white/30 hover:bg-white/40 p-6 rounded-xl transition-all duration-300 flex flex-col items-center text-center border-2 border-white/40 hover:border-white/60 transform hover:-translate-y-1 hover:shadow-lg"
           >
-            <ExclamationTriangleIcon className="h-12 w-12 text-white mb-4 group-hover:scale-110 transition-transform" />
             <h2 className="text-xl font-semibold text-white mb-2">Report Incident ⚠️</h2>
             <p className="text-white text-sm">Report suspicious activities</p>
           </button>

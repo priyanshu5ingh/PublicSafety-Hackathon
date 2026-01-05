@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { MapPinIcon, CalendarIcon, ClockIcon, PhotoIcon } from '@heroicons/react/24/outline';
+import { MapPinIcon } from '@heroicons/react/24/outline';
 import TransitionOverlay from '../components/TransitionOverlay';
 
 const ReportCrime = () => {
@@ -26,26 +26,19 @@ const ReportCrime = () => {
     setIsLoading(true);
     setShowTransition(true);
     setTransitionMsg('Submitting your report...');
-
-    // Validate location data
     if (!formData.latitude || !formData.longitude) {
       setTransitionMsg('Error: Please get your location first');
       setTimeout(() => setShowTransition(false), 3000);
       setIsLoading(false);
       return;
     }
-
     try {
       const submitFormData = new FormData();
-      
-      // Add all form fields
       Object.keys(formData).forEach(key => {
         if (key !== 'evidence_images') {
           submitFormData.append(key, formData[key]);
         }
       });
-
-      // Add images if any
       if (formData.evidence_images.length > 0) {
         formData.evidence_images.forEach((image) => {
           submitFormData.append('evidence_images', image);
@@ -62,7 +55,6 @@ const ReportCrime = () => {
           'Content-Type': 'multipart/form-data'
         }
       });
-
       if (response.data.success) {
         setTransitionMsg('Report submitted successfully!');
         setTimeout(() => {
@@ -73,7 +65,6 @@ const ReportCrime = () => {
         throw new Error(response.data.message || 'Failed to submit report');
       }
     } catch (error) {
-      console.error('Error submitting report:', error);
       setTransitionMsg('Error: ' + (error.response?.data?.message || error.message || 'Failed to submit report'));
       setTimeout(() => {
         setShowTransition(false);
@@ -127,7 +118,6 @@ const ReportCrime = () => {
               longitude: longitude.toString()
             }));
           } catch (error) {
-            console.error("Error getting location name:", error);
             alert("Error getting location name. The coordinates will be used instead.");
             setFormData(prev => ({
               ...prev,
@@ -137,8 +127,7 @@ const ReportCrime = () => {
             }));
           }
         },
-        (error) => {
-          console.error("Error getting location:", error);
+        () => {
           alert("Error getting your location. Please try again or enter manually.");
         }
       );
@@ -152,7 +141,6 @@ const ReportCrime = () => {
         <div className="max-w-2xl mx-auto">
           <div className="bg-white/30 backdrop-blur-sm rounded-xl p-8 shadow-2xl transition-all duration-300 hover:bg-white/40">
             <h2 className="text-3xl font-bold text-white text-center mb-8 transition-all duration-300 hover:scale-105">Report a Crime</h2>
-            
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="transition-all duration-300 hover:translate-x-2">
                 <label className="block text-sm font-medium text-white mb-1">
@@ -173,7 +161,6 @@ const ReportCrime = () => {
                   <option value="Other" className="bg-indigo-900">Other</option>
                 </select>
               </div>
-
               <div className="transition-all duration-300 hover:translate-x-2">
                 <label className="block text-sm font-medium text-white mb-1">
                   Description
@@ -188,7 +175,6 @@ const ReportCrime = () => {
                   placeholder="Describe what happened..."
                 />
               </div>
-
               <div className="transition-all duration-300 hover:translate-x-2">
                 <label className="block text-sm font-medium text-white mb-1">
                   Location
@@ -201,94 +187,76 @@ const ReportCrime = () => {
                     onChange={handleChange}
                     required
                     className="flex-1 px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all duration-300 hover:bg-white/30"
-                    placeholder="Enter location or use current location"
+                    placeholder="Enter location or use Get Location"
                   />
                   <button
                     type="button"
                     onClick={handleLocationClick}
-                    className="px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white hover:bg-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-300 hover:scale-105 flex items-center gap-2"
+                    className="flex items-center gap-1 px-4 py-2 bg-indigo-700 hover:bg-indigo-800 text-white rounded-lg transition-colors duration-200"
                   >
                     <MapPinIcon className="h-5 w-5" />
                     Get Location
                   </button>
                 </div>
-                <input type="hidden" name="latitude" value={formData.latitude} />
-                <input type="hidden" name="longitude" value={formData.longitude} />
               </div>
-
               <div className="transition-all duration-300 hover:translate-x-2">
                 <label className="block text-sm font-medium text-white mb-1">
-                  Witnesses (if any)
+                  Evidence (optional)
                 </label>
-                <textarea
-                  name="witnesses"
-                  value={formData.witnesses}
-                  onChange={handleChange}
-                  rows="2"
-                  className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all duration-300 hover:bg-white/30"
-                  placeholder="List any witnesses..."
-                />
-              </div>
-
-              <div className="transition-all duration-300 hover:translate-x-2">
-                <label className="block text-sm font-medium text-white mb-1">
-                  Additional Evidence
-                </label>
-                <textarea
+                <input
+                  type="text"
                   name="evidence"
                   value={formData.evidence}
                   onChange={handleChange}
-                  rows="2"
                   className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all duration-300 hover:bg-white/30"
-                  placeholder="Describe any additional evidence..."
+                  placeholder="Describe any evidence (optional)"
                 />
               </div>
-
               <div className="transition-all duration-300 hover:translate-x-2">
                 <label className="block text-sm font-medium text-white mb-1">
-                  Evidence Images
+                  Witnesses (optional)
                 </label>
-                <div className="space-y-4">
-                  <label className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white hover:bg-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-300 hover:scale-105">
-                    <PhotoIcon className="h-5 w-5" />
-                    <span>Add Photos</span>
-                    <input
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="hidden"
-                    />
-                  </label>
-
-                  {previewUrls.length > 0 && (
-                    <div className="grid grid-cols-2 gap-2 mt-2">
-                      {previewUrls.map((url, index) => (
-                        <div key={index} className="relative group transition-all duration-300 hover:scale-105">
-                          <img
-                            src={url}
-                            alt={`Evidence ${index + 1}`}
-                            className="w-full h-32 object-cover rounded-lg"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeImage(index)}
-                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
+                <input
+                  type="text"
+                  name="witnesses"
+                  value={formData.witnesses}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all duration-300 hover:bg-white/30"
+                  placeholder="List witnesses (optional)"
+                />
+              </div>
+              <div className="transition-all duration-300 hover:translate-x-2">
+                <label className="block text-sm font-medium text-white mb-1">
+                  Upload Evidence Images (optional)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageChange}
+                  className="block w-full text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                />
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {previewUrls.map((url, idx) => (
+                    <div key={idx} className="relative group">
+                      <img src={url} alt="Preview" className="w-20 h-20 object-cover rounded-lg border-2 border-white/40" />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(idx)}
+                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-80 hover:opacity-100"
+                        title="Remove"
+                      >
+                        ×
+                      </button>
                     </div>
-                  )}
+                  ))}
                 </div>
               </div>
-
-              <div className="flex justify-end pt-4">
+              <div>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="px-8 py-3 bg-white/20 border border-white/30 rounded-lg text-white hover:bg-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-300 hover:scale-105 font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  className="w-full py-3 px-6 bg-indigo-700 hover:bg-indigo-800 text-white font-bold rounded-lg transition-colors duration-200 shadow-lg text-lg disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {isLoading ? 'Submitting...' : 'Submit Report'}
                 </button>
