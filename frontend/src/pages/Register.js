@@ -39,7 +39,7 @@ export default function Register() {
     }
 
     try {
-      const response = await axios.post("http://localhost:5000/auth/register", form);
+      const response = await axios.post("http://localhost:5001/auth/register", form);
       // Check if the response indicates success (either through message or userId presence)
       if (response.data.message?.includes('success') || response.data.userId) {
         setSuccess(true);

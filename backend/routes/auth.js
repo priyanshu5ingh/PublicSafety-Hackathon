@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const db = require('../db');
+const dbModule = require('../config/db');
 const multer = require('multer');
 const path = require('path');
 
@@ -28,7 +28,7 @@ router.post('/register', async (req, res) => {
     }
 
     // Check if user already exists
-    const existingUser = await db.get(
+    const existingUser = await dbModule.get(
       'SELECT * FROM users WHERE email = ? OR username = ?',
       [email, username]
     );
@@ -45,7 +45,7 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Insert new user
-    const result = await db.run(
+    const result = await dbModule.run(
       'INSERT INTO users (email, username, password, name, phone) VALUES (?, ?, ?, ?, ?)',
       [email, username, hashedPassword, name, phone]
     );
@@ -61,72 +61,63 @@ router.post('/register', async (req, res) => {
 });
 
 // Login route
-router.post('/login', (req, res) => {
-  const { emailOrUsername, password } = req.body;
+router.post('/login', async (req, res) => {
+  try {
+    const { emailOrUsername, password } = req.body;
 
-  if (!emailOrUsername || !password) {
-    return res.status(400).json({
+    if (!emailOrUsername || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide both email/username and password'
+      });
+    }
+
+    // Check if user exists by email or username
+    const user = await dbModule.get(
+      'SELECT * FROM users WHERE email = ? OR username = ?',
+      [emailOrUsername, emailOrUsername]
+    );
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not found. Please register first.'
+      });
+    }
+
+    const validPassword = await bcrypt.compare(password, user.password);
+
+    if (!validPassword) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid password'
+      });
+    }
+
+    // Send user data (excluding password)
+    const { password: _, ...userData } = user;
+    res.json({
+      success: true,
+      message: 'Login successful',
+      user: userData
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({
       success: false,
-      message: 'Please provide both email/username and password'
+      message: 'Login failed. Please try again.'
     });
   }
-
-  // Check if user exists by email or username
-  db.get(
-    'SELECT * FROM users WHERE email = ? OR username = ?',
-    [emailOrUsername, emailOrUsername],
-    async (err, user) => {
-      if (err) {
-        console.error('Database error:', err);
-        return res.status(500).json({
-          success: false,
-          message: 'Login failed. Please try again.'
-        });
-      }
-
-      if (!user) {
-        return res.status(401).json({
-          success: false,
-          message: 'User not found. Please register first.'
-        });
-      }
-
-      try {
-        const validPassword = await bcrypt.compare(password, user.password);
-
-        if (!validPassword) {
-          return res.status(401).json({
-            success: false,
-            message: 'Invalid password'
-          });
-        }
-
-        // Send user data (excluding password)
-        const { password: _, ...userData } = user;
-        res.json({
-          success: true,
-          message: 'Login successful',
-          user: userData
-        });
-      } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({
-          success: false,
-          message: 'Login failed. Please try again.'
-        });
-      }
-    }
-  );
 });
 
 // TEMPORARY: List all users (for debugging only)
-router.get('/all-users', (req, res) => {
-  db.all('SELECT * FROM users', [], (err, rows) => {
-    if (err) return res.status(500).json({ message: err.message });
+router.get('/all-users', async (req, res) => {
+  try {
+    const rows = await dbModule.all('SELECT * FROM users', []);
     res.json(rows);
-  });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 });
-
-// Add to backend/routes/auth.js (for debugging only)
 
 module.exports = router;

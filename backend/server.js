@@ -2,15 +2,29 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const bodyParser = require('body-parser');
+const path = require('path');
 
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 const app = express();
 const port = process.env.PORT || 5000;
 
-// CORS configuration
+// Import database to ensure it's initialized
+require('./config/db');
+
+// CORS configuration - allow multiple origins
+const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
 app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: function(origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
     credentials: true
 }));
 

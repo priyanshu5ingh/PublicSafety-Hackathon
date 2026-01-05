@@ -111,7 +111,7 @@ export default function CrimeMap() {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/crime");
+        const res = await axios.get("http://localhost:5001/api/crime");
         setReports(res.data);
         
         // Calculate statistics
@@ -237,7 +237,7 @@ export default function CrimeMap() {
                                 {report.evidence_images.map((image, index) => (
                                   <img
                                     key={index}
-                                    src={`http://localhost:5000/api/crime/evidence/${image}`}
+                                    src={`http://localhost:5001/api/crime/evidence/${image}`}
                                     alt={`Evidence ${index + 1}`}
                                     className="w-full h-20 object-cover rounded"
                                   />

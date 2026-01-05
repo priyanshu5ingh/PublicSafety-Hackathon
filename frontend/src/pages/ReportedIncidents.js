@@ -12,7 +12,7 @@ export default function ReportedIncidents() {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/crime");
+        const res = await axios.get("http://localhost:5001/api/crime");
         setReports(res.data);
       } catch (error) {
         console.error("Error fetching reports:", error);

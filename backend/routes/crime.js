@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db');
+const dbModule = require('../config/db');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -38,7 +38,7 @@ const upload = multer({
 });
 
 // POST a new crime report with image uploads
-router.post('/', upload.array('evidence_images', 5), (req, res) => {
+router.post('/', upload.array('evidence_images', 5), async (req, res) => {
     console.log('Received crime report:', req.body);
     console.log('Received files:', req.files);
 
@@ -113,47 +113,46 @@ router.post('/', upload.array('evidence_images', 5), (req, res) => {
         timestamp
     });
 
-    db.run(
-        sql,
-        [
-            crimeType,
-            description,
-            locationName,
-            lat,
-            lng,
-            evidence,
-            witnesses,
-            JSON.stringify(evidenceImages),
-            timestamp
-        ],
-        function(err) {
-            if (err) {
-                console.error('Database error:', err);
-                // Delete uploaded files if database insertion fails
-                evidenceImages.forEach(filename => {
-                    const filepath = path.join(__dirname, '../uploads/evidence', filename);
-                    fs.unlinkSync(filepath);
-                });
-                return res.status(500).json({
-                    success: false,
-                    message: 'Error reporting crime. Please try again.',
-                    error: process.env.NODE_ENV === 'development' ? err.message : undefined
-                });
-            }
+    try {
+        const result = await dbModule.run(
+            sql,
+            [
+                crimeType,
+                description,
+                locationName,
+                lat,
+                lng,
+                evidence,
+                witnesses,
+                JSON.stringify(evidenceImages),
+                timestamp
+            ]
+        );
 
-            console.log('Crime report saved successfully with ID:', this.lastID);
-            res.status(201).json({
-                success: true,
-                message: 'Crime reported successfully',
-                id: this.lastID,
-                evidenceImages
-            });
-        }
-    );
+        console.log('Crime report saved successfully with ID:', result.lastID);
+        res.status(201).json({
+            success: true,
+            message: 'Crime reported successfully',
+            id: result.lastID,
+            evidenceImages
+        });
+    } catch (err) {
+        console.error('Database error:', err);
+        // Delete uploaded files if database insertion fails
+        evidenceImages.forEach(filename => {
+            const filepath = path.join(__dirname, '../uploads/evidence', filename);
+            fs.unlinkSync(filepath);
+        });
+        return res.status(500).json({
+            success: false,
+            message: 'Error reporting crime. Please try again.',
+            error: process.env.NODE_ENV === 'development' ? err.message : undefined
+        });
+    }
 });
 
 // GET all crime reports
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
     const sql = `
         SELECT 
             id,
@@ -170,15 +169,9 @@ router.get('/', (req, res) => {
         ORDER BY timestamp DESC
     `;
 
-    db.all(sql, [], (err, rows) => {
-        if (err) {
-            console.error('Database error:', err);
-            return res.status(500).json({
-                success: false,
-                message: 'Error fetching crime reports'
-            });
-        }
-
+    try {
+        const rows = await dbModule.all(sql, []);
+        
         // Parse evidence_images JSON string for each row
         const processedRows = rows.map(row => ({
             ...row,
@@ -186,7 +179,13 @@ router.get('/', (req, res) => {
         }));
 
         res.json(processedRows);
-    });
+    } catch (err) {
+        console.error('Database error:', err);
+        return res.status(500).json({
+            success: false,
+            message: 'Error fetching crime reports'
+        });
+    }
 });
 
 // Serve evidence images
@@ -196,7 +195,7 @@ router.get('/evidence/:filename', (req, res) => {
 });
 
 // GET a specific crime report
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
     const sql = `
         SELECT 
             id,
@@ -213,15 +212,9 @@ router.get('/:id', (req, res) => {
         WHERE id = ?
     `;
 
-    db.get(sql, [req.params.id], (err, row) => {
-        if (err) {
-            console.error('Database error:', err);
-            return res.status(500).json({
-                success: false,
-                message: 'Error fetching crime report'
-            });
-        }
-
+    try {
+        const row = await dbModule.get(sql, [req.params.id]);
+        
         if (!row) {
             return res.status(404).json({
                 success: false,
@@ -233,7 +226,13 @@ router.get('/:id', (req, res) => {
         row.evidence_images = row.evidence_images ? JSON.parse(row.evidence_images) : [];
 
         res.json(row);
-    });
+    } catch (err) {
+        console.error('Database error:', err);
+        return res.status(500).json({
+            success: false,
+            message: 'Error fetching crime report'
+        });
+    }
 });
 
 module.exports = router;
